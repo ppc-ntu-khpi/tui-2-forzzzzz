@@ -143,13 +143,44 @@ public class CLIdemo {
 
     public static void main(String[] args) {
 
-        Bank.addCustomer("John", "Doe");
-        Bank.addCustomer("Fox", "Mulder");
-        Bank.getCustomer(0).addAccount(new CheckingAccount(2000));
-        Bank.getCustomer(1).addAccount(new SavingsAccount(1000, 3));
+        initBankFromFile("test.dat");
 
         CLIdemo shell = new CLIdemo();
         shell.init();
         shell.run();
+    }
+
+    private static void initBankFromFile(String fileName) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
+            String line = reader.readLine();
+            int numCustomers = Integer.parseInt(line.trim());
+
+            for (int i = 0; i < numCustomers; i++) {
+                line = reader.readLine();
+                String[] customerData = line.split("\t");
+                String firstName = customerData[0];
+                String lastName = customerData[1];
+                int numAccounts = Integer.parseInt(customerData[2]);
+
+                Bank.addCustomer(firstName, lastName);
+                Customer customer = Bank.getCustomer(Bank.getNumberOfCustomers() - 1);
+
+                for (int j = 0; j < numAccounts; j++) {
+                    line = reader.readLine();
+                    String[] accountData = line.split("\t");
+                    String accountType = accountData[0];
+                    double balance = Double.parseDouble(accountData[1]);
+                    double extra = Double.parseDouble(accountData[2]);
+
+                    if ("S".equalsIgnoreCase(accountType)) {
+                        customer.addAccount(new SavingsAccount(balance, extra));
+                    } else if ("C".equalsIgnoreCase(accountType)) {
+                        customer.addAccount(new CheckingAccount(balance, extra));
+                    }
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("Error reading file: " + e.getMessage());
+        }
     }
 }
